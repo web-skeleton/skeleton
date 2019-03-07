@@ -2,19 +2,22 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
+
 	"github.com/mylxsw/go-toolkit/container"
 	"github.com/mylxsw/go-toolkit/log"
 	"github.com/web-skeleton/framework/internal"
 	"gopkg.in/urfave/cli.v1"
 	"gopkg.in/urfave/cli.v1/altsrc"
-	"io/ioutil"
-	"os"
-	"strings"
 )
 
 var logger = log.Module("main")
 
 var Version = ""
+var GitCommit = ""
 
 type config struct {
 	Data     internal.Data
@@ -27,12 +30,12 @@ func main() {
 		cli.StringFlag{
 			Name:  "conf",
 			Value: "",
-			Usage: "配置文件路径",
+			Usage: "configuration file",
 		},
 		altsrc.NewStringFlag(cli.StringFlag{
 			Name:  "log_level",
 			Value: "DEBUG",
-			Usage: "日志输出级别",
+			Usage: "log level",
 		}),
 		altsrc.NewBoolTFlag(cli.BoolTFlag{
 			Name:  "log_colorful",
@@ -41,7 +44,7 @@ func main() {
 		altsrc.NewStringFlag(cli.StringFlag{
 			Name:  "skeleton",
 			Value: "./skeleton",
-			Usage: "项目骨架模板目录",
+			Usage: "项目骨架模板目录，只有.sk扩展名的文件才会被作为模板解析，其它文件直接复制到目标文件",
 		}),
 		altsrc.NewStringFlag(cli.StringFlag{
 			Name:  "output",
@@ -56,8 +59,8 @@ func main() {
 	}
 
 	app := cli.NewApp()
-	app.Name = ""
-	app.Version = Version
+	app.Name = "skeleton"
+	app.Version = fmt.Sprintf("%s (%s)", Version, GitCommit)
 	app.Authors = []cli.Author{
 		{
 			Name:  "mylxsw",
@@ -89,7 +92,7 @@ func handler(c *cli.Context) error {
 	log.SetDefaultLevel(log.GetLevelByName(c.String("log_level")))
 	log.SetDefaultColorful(c.Bool("log_colorful"))
 
-	logger.Infof("version=%s", Version)
+	logger.Infof("version=%s", fmt.Sprintf("%s (%s)", Version, GitCommit))
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cc := container.NewWithContext(ctx)
@@ -125,6 +128,6 @@ func handler(c *cli.Context) error {
 	})
 
 	return cc.ResolveWithError(func(conf *config) error {
-		return internal.Artisan(cc, conf.Skeleton, conf.Output + ".zip", conf.Data)
+		return internal.Artisan(cc, conf.Skeleton, conf.Output+".zip", conf.Data)
 	})
 }

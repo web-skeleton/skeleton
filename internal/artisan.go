@@ -24,19 +24,18 @@ func Artisan(cc *container.Container, skeleton, dest string, data Data) error {
 			return fmt.Errorf("read %s failed: %s", f, err)
 		}
 
-		res, err := data.Parse(string(content))
-		if err != nil {
-			return fmt.Errorf("parse file %s failed: %s", f, err)
-		}
-
-		savedFilename := f
 		if strings.HasSuffix(f, ".sk") {
-			savedFilename = f[:len(f)-3]
+			res, err := data.Parse(string(content))
+			if err != nil {
+				return fmt.Errorf("parse file %s failed: %s", f, err)
+			}
+
+			parsedFiles[f[:len(f)-3]] = res
+			logger.Debugf("parse %s -> %s ok", f, f[:len(f)-3])
+		} else {
+			parsedFiles[f] = string(content)
+			logger.Debugf("copy %s ok", f)
 		}
-
-		parsedFiles[savedFilename] = res
-
-		logger.Debugf("%s -> %s ok", f, savedFilename)
 	}
 
 	buffer, err := CreateZipArchive(parsedFiles)
