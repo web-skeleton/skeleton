@@ -9,7 +9,7 @@ import (
 
 	"github.com/mylxsw/go-toolkit/container"
 	"github.com/mylxsw/go-toolkit/log"
-	"github.com/web-skeleton/framework/internal"
+	"github.com/web-skeleton/skeleton/internal"
 	"gopkg.in/urfave/cli.v1"
 	"gopkg.in/urfave/cli.v1/altsrc"
 )

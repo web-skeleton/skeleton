@@ -1,4 +1,4 @@
-module github.com/web-skeleton/framework
+module github.com/web-skeleton/skeleton
 
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
