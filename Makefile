@@ -14,6 +14,7 @@ build:
 dist:
 	CGO_ENABLED=0 GOOS=linux go build -ldflags $(LDFLAGS) -a -installsuffix cgo -o bin/skeleton-linux cmd/*.go
 	CGO_ENABLED=0 GOOS=darwin go build -ldflags $(LDFLAGS) -a -installsuffix cgo -o bin/skeleton-darwin cmd/*.go	
+	CGO_ENABLED=0 GOOS=windows go build -ldflags $(LDFLAGS) -a -installsuffix cgo -o bin/skeleton.exe cmd/*.go	
 
 .PHONY: install
 install:
