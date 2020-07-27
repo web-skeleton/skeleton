@@ -7,8 +7,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mylxsw/go-toolkit/container"
-	"github.com/mylxsw/go-toolkit/log"
+	"github.com/mylxsw/asteria/level"
+	"github.com/mylxsw/asteria/log"
+	"github.com/mylxsw/container"
 	"github.com/web-skeleton/skeleton/internal"
 	"gopkg.in/urfave/cli.v1"
 	"gopkg.in/urfave/cli.v1/altsrc"
@@ -36,10 +37,6 @@ func main() {
 			Name:  "log_level",
 			Value: "DEBUG",
 			Usage: "log level",
-		}),
-		altsrc.NewBoolTFlag(cli.BoolTFlag{
-			Name:  "log_colorful",
-			Usage: "日志是否彩色输出",
 		}),
 		altsrc.NewStringFlag(cli.StringFlag{
 			Name:  "skeleton",
@@ -89,8 +86,7 @@ func main() {
 }
 
 func handler(c *cli.Context) error {
-	log.SetDefaultLevel(log.GetLevelByName(c.String("log_level")))
-	log.SetDefaultColorful(c.Bool("log_colorful"))
+	log.All().LogLevel(level.GetLevelByName(c.String("log_level")))
 
 	logger.Infof("version=%s", fmt.Sprintf("%s (%s)", Version, GitCommit))
 

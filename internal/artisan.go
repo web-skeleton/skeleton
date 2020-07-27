@@ -7,8 +7,8 @@ import (
 	"path"
 	"strings"
 
-	"github.com/mylxsw/go-toolkit/collection"
-	"github.com/mylxsw/go-toolkit/log"
+	"github.com/mylxsw/asteria/log"
+	"github.com/mylxsw/coll"
 )
 
 var logger = log.Module("artisan")
@@ -21,7 +21,7 @@ func ParseSkeleton(skeletonPath string, data Data) (map[string][]byte, error) {
 
 	excludeFiles := make([]string, 0)
 
-	collection.MustNew(files).Filter(func(path string) bool {
+	coll.MustNew(files).Filter(func(path string) bool {
 		return strings.HasSuffix(path, "/exclude.skc")
 	}).Each(func(ef string) {
 		excludeBytes, err := ioutil.ReadFile(ef)
@@ -34,7 +34,7 @@ func ParseSkeleton(skeletonPath string, data Data) (map[string][]byte, error) {
 			panic(err)
 		}
 
-		collection.MustNew(strings.Split(lines, "\n")).Filter(func(line string) bool {
+		coll.MustNew(strings.Split(lines, "\n")).Filter(func(line string) bool {
 			return strings.TrimSpace(line) != ""
 		}).Each(func(line string) {
 			excludeFiles = append(excludeFiles, path.Join(path.Dir(ef), line))
