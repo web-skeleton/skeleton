@@ -36,7 +36,7 @@ func allFilesInDirectory(pathname string, s []string) ([]string, error) {
 }
 
 // CreateZipArchive create a zip archive file from files
-func CreateZipArchive(files map[string]string) (*bytes.Buffer, error) {
+func CreateZipArchive(files map[string][]byte) (*bytes.Buffer, error) {
 	var buffer bytes.Buffer
 	zipWriter := zip.NewWriter(&buffer)
 	defer func() {
@@ -49,7 +49,7 @@ func CreateZipArchive(files map[string]string) (*bytes.Buffer, error) {
 			return nil, err
 		}
 
-		_, err = writer.Write([]byte(content))
+		_, err = writer.Write(content)
 		if err != nil {
 			return nil, err
 		}

@@ -2,21 +2,21 @@ package internal
 
 import (
 	"fmt"
-	"github.com/mylxsw/go-toolkit/collection"
-	"github.com/mylxsw/go-toolkit/container"
-	"github.com/mylxsw/go-toolkit/log"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/mylxsw/go-toolkit/collection"
+	"github.com/mylxsw/go-toolkit/log"
 )
 
 var logger = log.Module("artisan")
 
-func Artisan(cc *container.Container, skeleton, dest string, data Data) error {
-	files, err := AllFilesInDirectory(skeleton)
+func ParseSkeleton(skeletonPath string, data Data) (map[string][]byte, error) {
+	files, err := AllFilesInDirectory(skeletonPath)
 	if err != nil {
-		return fmt.Errorf("read .sk files from %s failed: %s", skeleton, err)
+		return nil, fmt.Errorf("read .sk files from %s failed: %s", skeletonPath, err)
 	}
 
 	excludeFiles := make([]string, 0)
@@ -41,7 +41,7 @@ func Artisan(cc *container.Container, skeleton, dest string, data Data) error {
 		})
 	})
 
-	parsedFiles := make(map[string]string)
+	parsedFiles := make(map[string][]byte)
 	for _, f := range files {
 		if stringHasPrefixes(path.Join(path.Dir(f), path.Base(f)), excludeFiles) || strings.HasSuffix(f, "/exclude.skc") {
 			continue
@@ -49,23 +49,27 @@ func Artisan(cc *container.Container, skeleton, dest string, data Data) error {
 
 		content, err := ioutil.ReadFile(f)
 		if err != nil {
-			return fmt.Errorf("read %s failed: %s", f, err)
+			return nil, fmt.Errorf("read %s failed: %s", f, err)
 		}
 
 		if strings.HasSuffix(f, ".sk") {
 			res, err := data.Parse(string(content))
 			if err != nil {
-				return fmt.Errorf("parse file %s failed: %s", f, err)
+				return nil, fmt.Errorf("parse file %s failed: %s", f, err)
 			}
 
-			parsedFiles[f[:len(f)-3]] = res
+			parsedFiles[f[:len(f)-3]] = []byte(res)
 			logger.Debugf("parse %s -> %s ok", f, f[:len(f)-3])
 		} else {
-			parsedFiles[f] = string(content)
+			parsedFiles[f] = content
 			logger.Debugf("copy %s ok", f)
 		}
 	}
 
+	return parsedFiles, nil
+}
+
+func GenerateZip(parsedFiles map[string][]byte, dest string) error {
 	buffer, err := CreateZipArchive(parsedFiles)
 	if err != nil {
 		return fmt.Errorf("create zip archive failed: %s", err)

@@ -128,6 +128,11 @@ func handler(c *cli.Context) error {
 	})
 
 	return cc.ResolveWithError(func(conf *config) error {
-		return internal.Artisan(cc, conf.Skeleton, conf.Output+".zip", conf.Data)
+		parsedFiles, err := internal.ParseSkeleton(conf.Skeleton, conf.Data)
+		if err != nil {
+			return err
+		}
+
+		return internal.GenerateZip(parsedFiles, conf.Output+".zip")
 	})
 }
