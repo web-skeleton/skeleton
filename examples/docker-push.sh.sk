@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+TAG=`cat VERSION`
+
+docker build -t {{ .Author }}/{{ .ProjectName }} .
+
+docker tag {{ .Author }}/{{ .ProjectName }} {{ .Author }}/{{ .ProjectName }}:$TAG
+docker tag {{ .Author }}/{{ .ProjectName }}:$TAG {{ .Author }}/{{ .ProjectName }}:latest
+docker push {{ .Author }}/{{ .ProjectName }}:$TAG
+docker push {{ .Author }}/{{ .ProjectName }}:latest
+

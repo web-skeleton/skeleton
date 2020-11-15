@@ -1,0 +1,13 @@
+FROM golang:1.14 AS build
+RUN mkdir -p /golang/{{ .ProjectName }}
+WORKDIR /golang/{{ .ProjectName }}
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags '-s -w -X main.Version=latest -X main.GitCommit=24130b9704a9cd398932c3f0d2262b8568e02e65' -o {{ .ProjectName }} cmd/main.go
+
+FROM ubuntu:20.10
+WORKDIR /root
+COPY --from=build /golang/{{ .ProjectName }}/{{ .ProjectName }} .
+EXPOSE 19921
+CMD ["./{{ .ProjectName }}", "--listen", ":19921"]

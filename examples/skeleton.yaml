@@ -1,0 +1,7 @@
+vars:
+- name: "ProjectName"
+  desc: "Please input your project name"
+- name: "Package"
+  desc: "Please input your package"
+- name: "Author"
+  desc: "Please input author name"

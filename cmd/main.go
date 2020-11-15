@@ -5,14 +5,18 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
+	"github.com/AlecAivazis/survey/v2"
+	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/mylxsw/asteria/level"
 	"github.com/mylxsw/asteria/log"
 	"github.com/mylxsw/container"
 	"github.com/web-skeleton/skeleton/internal"
 	"gopkg.in/urfave/cli.v1"
 	"gopkg.in/urfave/cli.v1/altsrc"
+	"gopkg.in/yaml.v2"
 )
 
 var logger = log.Module("main")
@@ -24,6 +28,15 @@ type config struct {
 	Data     internal.Data
 	Skeleton string
 	Output   string
+}
+
+type Instruction struct {
+	Vars []InstructionVar `json:"vars" yaml:"vars"`
+}
+
+type InstructionVar struct {
+	Name string `json:"name" yaml:"name"`
+	Desc string `json:"desc" yaml:"desc"`
 }
 
 func main() {
@@ -45,13 +58,13 @@ func main() {
 		}),
 		altsrc.NewStringFlag(cli.StringFlag{
 			Name:  "output",
-			Value: "project",
+			Value: "",
 			Usage: "输出路径，默认为项目名称",
 		}),
 		altsrc.NewStringFlag(cli.StringFlag{
 			Name:  "template_vars",
-			Value: "./vars.json",
-			Usage: "模板变量文件",
+			Value: "",
+			Usage: "模板变量文件，留空则自动解析 skeleton 目录下的 skeleton.yaml",
 		}),
 	}
 
@@ -105,19 +118,61 @@ func handler(c *cli.Context) error {
 	// init configuration
 	cc.MustSingleton(func() *config {
 		conf := config{}
-		conf.Output = c.String("output")
-		conf.Skeleton = strings.TrimRight(c.String("skeleton"), "/")
 
-		source, err := ioutil.ReadFile(c.String("template_vars"))
-		if err != nil {
-			logger.Errorf("open template_vars file failed: %s", err)
-			os.Exit(2)
+		conf.Skeleton = strings.TrimRight(c.String("skeleton"), "/")
+		conf.Output = c.String("output")
+		if conf.Output == "" {
+			conf.Output = filepath.Base(conf.Skeleton)
 		}
 
-		conf.Data, err = internal.NewData(source)
-		if err != nil {
-			logger.Errorf("parse template_vars failed: %s", err)
-			os.Exit(2)
+		var source []byte
+		var err error
+		if c.String("template_vars") != "" {
+			source, err = ioutil.ReadFile(c.String("template_vars"))
+			if err != nil {
+				logger.Errorf("open template_vars file failed: %s", err)
+				os.Exit(2)
+			}
+
+			conf.Data, err = internal.NewData(source)
+			if err != nil {
+				logger.Errorf("parse template_vars failed: %s", err)
+				os.Exit(2)
+			}
+		} else {
+			instructionBytes, err := ioutil.ReadFile(filepath.Join(conf.Skeleton, "skeleton.yaml"))
+			if err != nil {
+				logger.Errorf("can not read skeleton.yaml file: %v", err)
+				os.Exit(2)
+			}
+
+			var instruction Instruction
+			if err := yaml.Unmarshal(instructionBytes, &instruction); err != nil {
+				logger.Errorf("parse skeleton.yaml failed: %v", err)
+				os.Exit(2)
+			}
+
+			qs := make([]*survey.Question, 0)
+			for _, q := range instruction.Vars {
+				qs = append(qs, &survey.Question{
+					Name:     q.Name,
+					Prompt:   &survey.Input{Message: q.Desc},
+					Validate: survey.Required,
+				})
+			}
+
+			data := make(map[string]interface{})
+			if err := survey.Ask(qs, &data); err != nil {
+				if err == terminal.InterruptErr {
+					logger.Warningf("interrupt received")
+					os.Exit(0)
+				}
+
+				logger.Errorf("parse question failed: %v", err)
+				os.Exit(2)
+			}
+
+			conf.Data = data
 		}
 
 		return &conf
