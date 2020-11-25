@@ -5,3 +5,10 @@ vars:
   desc: "Please input your package"
 - name: "Author"
   desc: "Please input author name"
+  default: "mylxsw"
+- name: "Type"
+  desc: "Please select project type"
+  options:
+    - "golang"
+    - "java"
+  default: "golang"

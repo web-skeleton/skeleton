@@ -18,4 +18,4 @@ dist:
 
 .PHONY: install
 install:
-	ln -s $(DIR)/bin/skeleton /usr/local/bin/skeleton
+	rm -fr /usr/local/bin/skeleton && ln -s $(DIR)/bin/skeleton /usr/local/bin/skeleton

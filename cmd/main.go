@@ -35,8 +35,10 @@ type Instruction struct {
 }
 
 type InstructionVar struct {
-	Name string `json:"name" yaml:"name"`
-	Desc string `json:"desc" yaml:"desc"`
+	Name    string   `json:"name" yaml:"name"`
+	Desc    string   `json:"desc" yaml:"desc"`
+	Default string   `json:"default" yaml:"default"`
+	Options []string `json:"options,omitempty" yaml:"options,omitempty"`
 }
 
 func main() {
@@ -154,9 +156,16 @@ func handler(c *cli.Context) error {
 
 			qs := make([]*survey.Question, 0)
 			for _, q := range instruction.Vars {
+				var prompt survey.Prompt
+				if len(q.Options) > 0 {
+					prompt = &survey.Select{Message: q.Desc, Default: q.Default, Options: q.Options}
+				} else {
+					prompt = &survey.Input{Message: q.Desc, Default: q.Default}
+				}
+
 				qs = append(qs, &survey.Question{
 					Name:     q.Name,
-					Prompt:   &survey.Input{Message: q.Desc},
+					Prompt:   prompt,
 					Validate: survey.Required,
 				})
 			}
