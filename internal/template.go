@@ -15,6 +15,7 @@ type Data map[string]interface{}
 func (d Data) Parse(content string) (string, error) {
 	funcMap := template.FuncMap{
 		"implode":     strings.Join,
+		"explode":     strings.Split,
 		"datetime":    datetimeFormat,
 		"starts_with": startsWith,
 		"ends_with":   endsWith,

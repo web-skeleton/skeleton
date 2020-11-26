@@ -35,10 +35,11 @@ type Instruction struct {
 }
 
 type InstructionVar struct {
-	Name    string   `json:"name" yaml:"name"`
-	Desc    string   `json:"desc" yaml:"desc"`
-	Default string   `json:"default" yaml:"default"`
-	Options []string `json:"options,omitempty" yaml:"options,omitempty"`
+	Name     string   `json:"name" yaml:"name"`
+	Desc     string   `json:"desc" yaml:"desc"`
+	Default  string   `json:"default" yaml:"default"`
+	Optional bool     `json:"optional" yaml:"optional"`
+	Options  []string `json:"options,omitempty" yaml:"options,omitempty"`
 }
 
 func main() {
@@ -56,17 +57,17 @@ func main() {
 		altsrc.NewStringFlag(cli.StringFlag{
 			Name:  "skeleton",
 			Value: "./skeleton",
-			Usage: "项目骨架模板目录，只有.sk扩展名的文件才会被作为模板解析，其它文件直接复制到目标文件",
+			Usage: "Project skeleton template directory, only files with .sk extension will be parsed as templates, and other files will be copied directly to the target file",
 		}),
 		altsrc.NewStringFlag(cli.StringFlag{
 			Name:  "output",
 			Value: "",
-			Usage: "输出路径，默认为项目名称",
+			Usage: "Output path, default is the project name",
 		}),
 		altsrc.NewStringFlag(cli.StringFlag{
 			Name:  "template_vars",
 			Value: "",
-			Usage: "模板变量文件，留空则自动解析 skeleton 目录下的 skeleton.yaml",
+			Usage: "Template variable file, leave it blank to automatically parse skeleton.yaml in the skeleton directory",
 		}),
 	}
 
@@ -163,15 +164,22 @@ func handler(c *cli.Context) error {
 					prompt = &survey.Input{Message: q.Desc, Default: q.Default}
 				}
 
-				qs = append(qs, &survey.Question{
-					Name:     q.Name,
-					Prompt:   prompt,
-					Validate: survey.Required,
-				})
+				ques := survey.Question{
+					Name:   q.Name,
+					Prompt: prompt,
+				}
+				if !q.Optional {
+					ques.Validate = survey.Required
+				}
+
+				qs = append(qs, &ques)
 			}
 
 			data := make(map[string]interface{})
-			if err := survey.Ask(qs, &data); err != nil {
+			if err := survey.Ask(qs, &data, survey.WithIcons(func(icons *survey.IconSet) {
+				icons.Question.Text = "🔶"
+				icons.SelectFocus.Text = "🔷"
+			})); err != nil {
 				if err == terminal.InterruptErr {
 					logger.Warningf("interrupt received")
 					os.Exit(0)
@@ -179,6 +187,33 @@ func handler(c *cli.Context) error {
 
 				logger.Errorf("parse question failed: %v", err)
 				os.Exit(2)
+			}
+
+			fmt.Println("")
+			for k, v := range data {
+				fmt.Printf("%30s: %v\n", k, v)
+			}
+			fmt.Println("")
+
+			var confirmed bool
+			if err := survey.AskOne(&survey.Confirm{
+				Message: "Are you sure to use the above parameters?",
+				Default: false,
+			}, &confirmed, survey.WithIcons(func(icons *survey.IconSet) {
+				icons.Question.Text = "🔴"
+			})); err != nil {
+				if err == terminal.InterruptErr {
+					logger.Warningf("interrupt received")
+					os.Exit(0)
+				}
+
+				logger.Errorf("parse question failed: %v", err)
+				os.Exit(2)
+			}
+
+			if !confirmed {
+				logger.Debug("operation canceled")
+				os.Exit(0)
 			}
 
 			conf.Data = data
