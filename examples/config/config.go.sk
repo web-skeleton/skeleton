@@ -9,6 +9,7 @@ import (
 type Config struct {
 	Listen  string `json:"listen"`
 	Debug   bool   `json:"debug"`
+	LogPath string `json:"log_path"`
 }
 
 func (conf *Config) Serialize() string {

@@ -10,4 +10,4 @@ FROM ubuntu:20.10
 WORKDIR /root
 COPY --from=build /golang/{{ .ProjectName }}/{{ .ProjectName }} .
 EXPOSE 19921
-CMD ["./{{ .ProjectName }}", "--listen", ":19921"]
+CMD ["./{{ .ProjectName }}", "--listen", "{{ .Listen }}"]

@@ -1,12 +1,12 @@
-Version := $(shell git describe --tags --dirty)
+Version := $(shell date "+%Y%m%d%H%M")
 GitCommit := $(shell git rev-parse HEAD)
-LDFLAGS := "-s -w -X main.Version=$(Version) -X main.GitCommit=$(GitCommit)"
+DIR := $(shell pwd)
+LDFLAGS := -s -w -X main.Version=$(Version) -X main.GitCommit=$(GitCommit)
 
 .PHONY: build
 build:
-	CGO_ENABLED=0 go build -ldflags $(LDFLAGS) -a -installsuffix cgo -o bin/{{ .ProjectName }} cmd/*.go
+	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/{{ .ProjectName }} cmd/*.go
 
 .PHONY: dist
 dist:
-	CGO_ENABLED=0 GOOS=linux go build -ldflags $(LDFLAGS) -a -installsuffix cgo -o bin/{{ .ProjectName }}-linux cmd/*.go
-	CGO_ENABLED=0 GOOS=darwin go build -ldflags $(LDFLAGS) -a -installsuffix cgo -o bin/{{ .ProjectName }}-darwin cmd/*.go
+	CGO_ENABLED=0 GOOS=linux go build -ldflags "$(LDFLAGS)" -o bin/{{ .ProjectName }}-linux cmd/*.go

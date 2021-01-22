@@ -1,0 +1,24 @@
+package scheduler
+
+import (
+	// "{{ .Package }}/internal/scheduler/job"
+	"github.com/mylxsw/container"
+	"github.com/mylxsw/glacier/cron"
+	"github.com/mylxsw/glacier/infra"
+)
+
+type ServiceProvider struct{}
+
+func (s ServiceProvider) Register(app container.Container) {
+	// app.MustSingleton(job.NewExampleJob(app))
+}
+
+func (s ServiceProvider) Boot(app infra.Glacier) {
+	app.Cron(func(cr cron.Manager, cc container.Container) error {
+		return cc.Resolve(func(
+		// exampleJob *job.ExampleJob,
+		) {
+			// _ = cr.Add(job.ExampleJobName, "@every 30s", exampleJob.Handle)
+		})
+	})
+}

@@ -198,7 +198,7 @@ func handler(c *cli.Context) error {
 			var confirmed bool
 			if err := survey.AskOne(&survey.Confirm{
 				Message: "Are you sure to use the above parameters?",
-				Default: false,
+				Default: true,
 			}, &confirmed, survey.WithIcons(func(icons *survey.IconSet) {
 				icons.Question.Text = "🔴"
 			})); err != nil {
