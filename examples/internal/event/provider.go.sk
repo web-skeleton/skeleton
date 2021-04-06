@@ -1,24 +1,25 @@
 package event
 
 import (
-	"github.com/mylxsw/asteria/log"
-	"github.com/mylxsw/container"
 	"github.com/mylxsw/glacier/event"
 	"github.com/mylxsw/glacier/infra"
 )
 
-type ServiceProvider struct{}
+type Provider struct{}
 
-func (s ServiceProvider) Register(app container.Container) {
+func (s Provider) Aggregates() []infra.Provider {
+	return []infra.Provider{
+		event.Provider(s.eventHandler, event.SetStoreOption(func(cc infra.Resolver) event.Store {
+			return event.NewMemoryEventStore(true, 100)
+		})),
+	}
 }
 
-func (s ServiceProvider) Boot(app infra.Glacier) {
-	app.EventListener(func(manager event.Manager, cc container.Container) {
-		manager.Listen(func(ev SystemUpDownEvent) {
-			// TODO
-			if log.DebugEnabled() {
-				log.Debugf("system %s event received", ev.EvtType())
-			}
-		})
+func (s Provider) Register(cc infra.Binder) {}
+func (s Provider) Boot(cc infra.Resolver)   {}
+
+func (s Provider) eventHandler(cc infra.Resolver, listener event.Listener) {
+	listener.Listen(func(evt SystemUpDownEvent) {
+		
 	})
 }

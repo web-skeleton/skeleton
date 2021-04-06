@@ -1,23 +1,19 @@
 package main
 
 import (
-    "fmt"
-    "os"
-    "path/filepath"
-    "runtime/debug"
+	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
-	"github.com/gorilla/mux"
-    "github.com/mylxsw/asteria/formatter"
-    "github.com/mylxsw/asteria/level"
-    "github.com/mylxsw/asteria/log"
-    "github.com/mylxsw/asteria/writer"
-    "github.com/mylxsw/container"
-    "github.com/mylxsw/glacier/event"
-    "github.com/mylxsw/glacier/infra"
-    "github.com/mylxsw/glacier/listener"
-    "github.com/mylxsw/glacier/starter/application"
-    "github.com/mylxsw/glacier/web"
+	"github.com/mylxsw/asteria/formatter"
+	"github.com/mylxsw/asteria/level"
+	"github.com/mylxsw/asteria/log"
+	"github.com/mylxsw/asteria/writer"
+	"github.com/mylxsw/container"
+	"github.com/mylxsw/glacier/event"
+	"github.com/mylxsw/glacier/infra"
+	"github.com/mylxsw/glacier/starter/application"
 	"github.com/urfave/cli"
 	"github.com/urfave/cli/altsrc"
 
@@ -76,12 +72,6 @@ func main() {
 		return nil
 	})
 
-	app.WithHttpServer(listener.FlagContext("listen"))
-	app.WebAppExceptionHandler(func(ctx web.Context, err interface{}) web.Response {
-		log.Errorf("error: %v, call stack: %s", err, debug.Stack())
-		return nil
-	})
-
 	app.Singleton(func(c infra.FlagContext) *config.Config {
 		return &config.Config{
 			Listen:  c.String("listen"),
@@ -90,8 +80,8 @@ func main() {
 		}
 	})
 
-	app.BeforeServerStop(func(cc container.Container) error {
-		return cc.Resolve(func(em event.Manager) {
+	app.BeforeServerStop(func(cc infra.Resolver) error {
+		return cc.Resolve(func(em event.Publisher) {
 			em.Publish(localEvt.SystemUpDownEvent{
 				Up:        false,
 				CreatedAt: time.Now(),
@@ -99,15 +89,11 @@ func main() {
 		})
 	})
 
-	app.Main(func(conf *config.Config, router *mux.Router, em event.Manager) {
+	app.Main(func(conf *config.Config, em event.Publisher) {
 		if log.DebugEnabled() {
 			log.WithFields(log.Fields{
 				"config": conf,
 			}).Debug("configuration")
-
-			for _, r := range web.GetAllRoutes(router) {
-				log.Debugf("route: %s -> %s | %s | %s", r.Name, r.Methods, r.PathTemplate, r.PathRegexp)
-			}
 		}
 
 		em.Publish(localEvt.SystemUpDownEvent{
@@ -116,9 +102,7 @@ func main() {
 		})
 	})
 
-	app.Provider(api.ServiceProvider{})
-	app.Provider(localEvt.ServiceProvider{})
-	app.Provider(scheduler.ServiceProvider{})
+	app.Provider(api.Provider{}, localEvt.Provider{}, scheduler.Provider{})
 
 	if err := app.Run(os.Args); err != nil {
 		log.Errorf("exit with error: %s", err)
