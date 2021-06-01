@@ -10,6 +10,9 @@ type Config struct {
 	Listen  string `json:"listen"`
 	Debug   bool   `json:"debug"`
 	LogPath string `json:"log_path"`
+
+	SessionKey string `json:"-"`
+	SessionName string `json:"session_name"`
 }
 
 func (conf *Config) Serialize() string {

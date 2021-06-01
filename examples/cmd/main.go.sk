@@ -41,6 +41,15 @@ func main() {
 		Name:  "log_path",
 		Usage: "日志文件输出目录（非文件名），默认为空，输出到标准输出",
 	}))
+	app.AddFlags(altsrc.NewStringFlag(cli.StringFlag{
+		Name:   "session_key",
+		Usage:  "Session key",
+	}))
+	app.AddFlags(altsrc.NewStringFlag(cli.StringFlag{
+		Name:   "session_name",
+		Usage:  "Session name",
+		Value:  "Example",
+	}))
 
 	app.BeforeServerStart(func(cc container.Container) error {
 		stackWriter := writer.NewStackWriter()
@@ -74,9 +83,11 @@ func main() {
 
 	app.Singleton(func(c infra.FlagContext) *config.Config {
 		return &config.Config{
-			Listen:  c.String("listen"),
-			Debug:   c.Bool("debug"),
-			LogPath: c.String("log_path"),
+			Listen:      c.String("listen"),
+			Debug:       c.Bool("debug"),
+			LogPath:     c.String("log_path"),
+			SessionKey:  c.String("session_key"),
+			SessionName: c.String("session_name"),
 		}
 	})
 

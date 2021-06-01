@@ -5,9 +5,10 @@ import (
 	"github.com/mylxsw/glacier/web"
 
 	"{{ .Package }}/api/controller"
+	"{{ .Package }}/config"
 )
 
-func controllers(cc container.Resolver) []web.Controller {
+func controllers(cc container.Resolver, conf *config.Config) []web.Controller {
 	return []web.Controller{
 		controller.NewWelcomeController(cc),
 	}
